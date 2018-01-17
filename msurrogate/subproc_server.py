@@ -41,22 +41,31 @@ class ServerSubprocess(object):
         self.mysecret = str(uuid.uuid4())
         self.proc.stdin.write(self.mysecret + "\n")
 
-        lines = []
+        #start the error feed first so that we can see what is going on
+        self.stderr_thread = threading.Thread(
+            target = self._stderr_thread_loop,
+            name = 'python subprocess stderr feed'
+        )
+        self.stderr_thread.daemon = True
+        self.stderr_thread.start()
+
         while True:
             line = self.proc.stdout.readline()
-            lines.append(line)
+            if not line:
+                raise RuntimeError("Subprocess Did not complete its output")
+            if line.strip() == 'COOKIE_START':
+                break
+            sys.stdout.write(self.stdout_prepend + line)
+
+        cookie_lines = []
+        while True:
+            line = self.proc.stdout.readline()
+            if not line:
+                raise RuntimeError("Subprocess Did not complete its output")
             if line.strip() == 'COOKIE_END':
                 break
-        for idx, line in enumerate(lines):
-            if line.strip() == 'COOKIE_START':
-                idx_start = idx
-                break
-        cookie_lines = lines[idx_start + 1 : -1]
+            cookie_lines.append(line)
         self.cookie_dict = json.loads(''.join(cookie_lines))
-
-        #now print everything else:
-        for line in lines[:idx_start]:
-            sys.stdout.write(self.stdout_prepend + line)
 
         self.stdout_thread = threading.Thread(
             target = self._stdout_thread_loop,
@@ -65,12 +74,6 @@ class ServerSubprocess(object):
         self.stdout_thread.daemon = True
         self.stdout_thread.start()
 
-        self.stderr_thread = threading.Thread(
-            target = self._stderr_thread_loop,
-            name = 'python subprocess stderr feed'
-        )
-        self.stderr_thread.daemon = True
-        self.stderr_thread.start()
         return
 
     def stop(self):
@@ -83,6 +86,8 @@ class ServerSubprocess(object):
         proc = self.proc
         while proc is not None:
             line = proc.stdout.readline()
+            if not line:
+                break
             sys.stdout.write(self.stdout_prepend + line)
             proc = self.proc
 
@@ -90,6 +95,8 @@ class ServerSubprocess(object):
         proc = self.proc
         while proc is not None:
             line = proc.stderr.readline()
+            if not line:
+                break
             sys.stderr.write(self.stderr_prepend + line)
             proc = self.proc
 

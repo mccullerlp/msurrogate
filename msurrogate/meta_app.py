@@ -321,7 +321,6 @@ class SurrogateApp(object):
             print()
             print('COOKIE_END')
             sys.stdout.flush()
-            print("HMMM", file = sys.stderr)
         else:
             with open(self.cookiefile, 'w') as F:
                 json.dump(
