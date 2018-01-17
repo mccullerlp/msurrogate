@@ -23,7 +23,7 @@ classdef pyrowrap < handle
       %should inform pyro that the object is "done"
       try
         %TODO deal with async
-        self.object.pyrosuper_done()
+        self.object.pyrometa_done()
       catch
         %pass
       end
@@ -52,7 +52,7 @@ classdef pyrowrap < handle
               kwargs = mat2py(kwargs);
 
               %too dynamic for matlab's interface, so use getattr
-              call = py.getattr(self.internal(), 'pyrosuper_call');
+              call = py.getattr(self.internal(), 'pyrometa_call');
               val = pyapply(call, args, kwargs);
               [varargout{1:nargout}] = py2mat(val);
               return
@@ -68,7 +68,7 @@ classdef pyrowrap < handle
               %TODO MAKE ASYNC
               py.Pyro4.async(self.internal(), true);
 
-              call = py.getattr(self.internal(), 'pyrosuper_call');
+              call = py.getattr(self.internal(), 'pyrometa_call');
               val = pyapply(call, args, kwargs);
 
               py.Pyro4.async(self.internal(), false);
@@ -76,7 +76,7 @@ classdef pyrowrap < handle
               return
             end
 
-            call = py.getattr(self.internal(), 'pyrosuper_getattr');
+            call = py.getattr(self.internal(), 'pyrometa_getattr');
             val = pyapply(call, {name}, struct());
 
             if not(isempty(ref(2:end)))
@@ -96,7 +96,7 @@ classdef pyrowrap < handle
             args = mat2py({py.None, args{:}});
             kwargs = mat2py(kwargs);
 
-            call = py.getattr(self.internal(), 'pyrosuper_call')
+            call = py.getattr(self.internal(), 'pyrometa_call')
             val = pyapply(call, args, kwargs);
             val = py2mat(val);
 
@@ -112,7 +112,7 @@ classdef pyrowrap < handle
             %now need to convert to str, single index or index array
             %TODO
 
-            call = py.getattr(self.internal(), 'pyrosuper_getitem')
+            call = py.getattr(self.internal(), 'pyrometa_getitem')
             val = pyapply(call, args, struct());
             val = py2mat(val);
 
@@ -140,7 +140,7 @@ classdef pyrowrap < handle
           name = ref(1).subs;
           val = mat2py(val);
 
-          call = py.getattr(self.internal(), 'pyrosuper_getattr');
+          call = py.getattr(self.internal(), 'pyrometa_getattr');
           val = pyapply(call, {name, val}, struct());
 
           return
@@ -149,7 +149,7 @@ classdef pyrowrap < handle
           idx = mat2py(idx);
           val = mat2py(val);
 
-          call = py.getattr(self.internal(), 'pyrosuper_getattr');
+          call = py.getattr(self.internal(), 'pyrometa_getattr');
           pyapply(call, {idx, val}, struct());
           return
         otherwise
