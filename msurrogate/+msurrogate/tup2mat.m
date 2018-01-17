@@ -7,6 +7,8 @@ function [varargout] = tup2mat(object)
       switch ME.identifier
       case 'MATLAB:cell2mat:MixedDataTypes'
         varargout{1} = cellfun(@py2mat, ocells, 'UniformOutput', false);
+      case 'MATLAB:cell2mat:UnsupportedCellContent'
+        varargout{1} = cellfun(@py2mat, ocells, 'UniformOutput', false);
       otherwise
         ME.identifier
         error(ME)

@@ -28,6 +28,9 @@ class ServerSubprocess(object):
         if python_call is None:
             python_call = sys.executable
 
+        if module_name is None:
+            raise RuntimeError("Must specify module_name")
+
         self.proc = subprocess.Popen(
             [python_call, '-m', module_name, '-S', '-', '-c', '-'] + args,
             stdout = subprocess.PIPE,

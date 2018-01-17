@@ -24,10 +24,13 @@ function [varargout] = py2mat(object)
     end
     arr = reshape(arr, shape);
     varargout{1} = arr;
-
+   case 'py.str'
+     varargout{1} = char(object);
+   case 'py.unicode'
+     varargout{1} = char(object);
   otherwise
     if strcmp(cname(1:3), 'py.')
-      if strcmp(cname(1:9), 'py.Pyro4.') && strcmp(cname(end-4:end), 'Proxy')
+      if length(cname) >= 14 && strcmp(cname(1:9), 'py.Pyro4.') && strcmp(cname(end-4:end), 'Proxy')
         %it may be a superproxy! so try it out
         if py.hasattr(object, 'pyrosuper_getattr')
           varargout{1} = pyrowrap(object, false);
