@@ -46,7 +46,7 @@ classdef PySurrogate < handle
         %subsref is never used from within the class
         s = struct('type', '()', 'subs', {'workspace_close',});
         close_call = subsref(self, s);
-        close_call();
+        close_call.oneway_();
       else
         error('This workspace connection does not expose workspace_close')
       end
@@ -96,7 +96,7 @@ classdef PySurrogate < handle
       if self.auto_stop
         self.stop();
       end
-      args, kwargs = collectargs(varargin);
+      [args, kwargs] = collectargs(varargin);
 
       raw = getfielddefault(kwargs, 'rawtext', false);
       auto_stop = getfielddefault(kwargs, 'auto_stop', false);
@@ -104,11 +104,11 @@ classdef PySurrogate < handle
       if raw
         text = fname;
       else
-        text = fileread(text);
+        text = fileread(fname);
       end
 
       %setup can take text
-      workspace = py.msurrogate.pryo_setup(text);
+      workspace = py.msurrogate.cookie_setup(text);
       self.auto_stop = auto_stop;
       self.workspace = dict2map(workspace);
     end

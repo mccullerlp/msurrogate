@@ -39,38 +39,86 @@ classdef pyrowrap < handle
 
             %this is the method-call form, so don't do the usual subsref recursion and instead do the direct method call
             if all(length(ref) == 2) && all(ref(2).type == '()')
+              %check first if this is a direct call that is async or oneway
+              switch name
+              case 'async_'
+                args_raw = ref(2).subs;
+                [args, kwargs] = collectargs(args_raw);
 
-              args_raw = ref(2).subs;
-              [args, kwargs] = collectargs(args_raw);
+                %insert py.None to the args to mean a direct call
+                args = mat2py({py.None, args{:}});
+                kwargs = mat2py(kwargs);
 
-              %insert name to the args here as indexing is different once a python object
-              args = mat2py({name, args{:}});
-              kwargs = mat2py(kwargs);
+                             %too dynamic for matlab's interface, so use getattr
+                py.Pyro4.async(self.internal(), true);
+                call = py.getattr(self.internal(), 'pyrometa_call');
+                val = pyapply(call, args, kwargs);
+                py.Pyro4.async(self.internal(), false);
 
-              %too dynamic for matlab's interface, so use getattr
-              call = py.getattr(self.internal(), 'pyrometa_call');
-              val = pyapply(call, args, kwargs);
-              [varargout{1:nargout}] = py2mat(val, self.handle);
-              return
-            elseif (length(ref) == 3) && all(ref(2).type == '.') && all(ref(3).type == '()') && all(ref(2).subs == 'async')
-              args_raw = ref(3).subs;
-              [args, kwargs] = collectargs(args_raw);
+                [varargout{1:nargout}] = pyrowrap(val, true, self.handle);
+                return
+              case 'oneway_'
+                args_raw = ref(2).subs;
+                [args, kwargs] = collectargs(args_raw);
 
-              %insert name to the args here as indexing is different once a python object
-              args = mat2py({name, args{:}});
-              kwargs = mat2py(kwargs);
+                %insert name to the args here as indexing is different once a python object
+                args = mat2py({py.None, args{:}});
+                kwargs = mat2py(kwargs);
 
-              %too dynamic for matlab's interface, so use getattr
-              %TODO MAKE ASYNC
-              py.Pyro4.async(self.internal(), true);
+                             %too dynamic for matlab's interface, so use getattr
+                call = py.getattr(self.internal(), 'pyrometa_call_oneway');
+                pyapply(call, args, kwargs);
+                varargout{:} = {};
+                return
+              otherwise
+                args_raw = ref(2).subs;
+                [args, kwargs] = collectargs(args_raw);
 
-              call = py.getattr(self.internal(), 'pyrometa_call');
-              val = pyapply(call, args, kwargs);
+                %insert name to the args here as indexing is different once a python object
+                args = mat2py({name, args{:}});
+                kwargs = mat2py(kwargs);
 
-              py.Pyro4.async(self.internal(), false);
-              [varargout{1:nargout}] = pyrowrap(val, true, self.handle);
-              return
+                %too dynamic for matlab's interface, so use getattr
+                call = py.getattr(self.internal(), 'pyrometa_call');
+                val = pyapply(call, args, kwargs);
+                [varargout{1:nargout}] = py2mat(val, self.handle);
+                return
+              end
+            elseif (length(ref) == 3) && all(ref(2).type == '.') && all(ref(3).type == '()')
+              switch ref(2).subs
+              case 'async_'
+                args_raw = ref(3).subs;
+                [args, kwargs] = collectargs(args_raw);
+
+                %insert name to the args here as indexing is different once a python object
+                args = mat2py({name, args{:}});
+                kwargs = mat2py(kwargs);
+
+                %too dynamic for matlab's interface, so use getattr
+                py.Pyro4.async(self.internal(), true);
+                call = py.getattr(self.internal(), 'pyrometa_call');
+                val = pyapply(call, args, kwargs);
+                py.Pyro4.async(self.internal(), false);
+
+                [varargout{1:nargout}] = pyrowrap(val, true, self.handle);
+                return
+             case 'oneway_'
+                args_raw = ref(3).subs;
+                [args, kwargs] = collectargs(args_raw);
+
+                %insert name to the args here as indexing is different once a python object
+                args = mat2py({name, args{:}});
+                kwargs = mat2py(kwargs);
+
+                %too dynamic for matlab's interface, so use getattr
+                call = py.getattr(self.internal(), 'pyrometa_call_oneway');
+                pyapply(call, args, kwargs);
+                varargout{:} = {};
+                return
+              end
             end
+
+            %otherwise it is just a typical indexing operation
 
             call = py.getattr(self.internal(), 'pyrometa_getattr');
             val = pyapply(call, {name}, struct());
@@ -170,43 +218,46 @@ classdef pyrowrap < handle
   end
 
   methods
-    function c = disp(object)
-      disp(['pyrowrap[', repr(object), ']']);
-    end
-
-    function c = char(object)
+    function c = char(self)
       call = py.getattr(self.internal(), 'pyrometa_str');
-      val = pyapply(call, args, kwargs);
+      val = msurrogate.pyapply(call, {}, struct());
       c = char(val);
     end
 
     function out = dir(self)
       call = py.getattr(self.internal(), 'pyrometa_dir');
-      val = pyapply(call, args, kwargs);
+      val = msurrogate.pyapply(call, {}, struct());
       out = msurrogate.py2mat(py.dir(dir), self.handle);
     end
 
-    function c = repr(object)
+    function c = repr(self)
       call = py.getattr(self.internal(), 'pyrometa_repr');
-      val = pyapply(call, args, kwargs);
+      val = msurrogate.pyapply(call, {}, struct());
       out = msurrogate.py2mat(val, self.handle);
       c = ['<remote>', out];
     end
 
-    function s = struct(object)
-      s = msurrogate.dict2struct(object.object);
+    function c = disp(self)
+      call = py.getattr(self.internal(), 'pyrometa_repr');
+      val = msurrogate.pyapply(call, {}, struct());
+      out = msurrogate.py2mat(val, self.handle);
+      disp(['pyrowrap[', out, ']']);
     end
 
-    function [varargout] = mat2py(object)
-      varargout{1} = object.object;
+    function s = struct(self)
+      s = msurrogate.dict2struct(self.object);
     end
 
-    function out = properties(object)
-      out = dir(object)
+    function [varargout] = mat2py(self)
+      varargout{1} = self.object;
     end
 
-    function val = pyraw(object)
-      val = object.object;
+    function out = properties(self)
+      out = dir(self)
+    end
+
+    function val = pyraw(self)
+      val = self.object;
     end
   end
 end

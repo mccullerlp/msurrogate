@@ -65,13 +65,13 @@ class MetaProxy(object):
         raise NotImplementedError()
 
     def pyrometa_repr(self):
-        return repr(self)
+        return repr(self.obj)
 
     def pyrometa_str(self):
-        return str(self)
+        return str(self.obj)
 
     def pyrometa_dir(self):
-        return dir(self)
+        return dir(self.obj)
 
     def pyrometa_getattr(self, name):
         checkname(self.obj, name)
@@ -106,6 +106,19 @@ class MetaProxy(object):
             ret = val(*unargs, **unkwargs)
         return self.pyrometa_wrap(ret)
 
+    @Pyro4.oneway
+    def pyrometa_call_oneway(self, name, *args, **kwargs):
+        if name is None:
+            val = self.obj
+        else:
+            checkname(self.obj, name)
+            val = getattr(self.obj, name)
+        unargs = self.pyrometa_unwrap(args)
+        unkwargs = self.pyrometa_unwrap(kwargs)
+        with self.metaD.worker_sem:
+            ret = val(*unargs, **unkwargs)
+        return
+
     def pyrometa_done(self):
         if not self.protect and self.done:
             raise RuntimeError("done set twice!")
@@ -116,6 +129,8 @@ class MetaProxy(object):
         throw causes an exception instead of creating a sub MetaProxy
         """
         if isinstance(obj, np.ndarray):
+            return obj
+        elif obj is None:
             return obj
         elif isinstance(obj, numbers.Number):
             return obj

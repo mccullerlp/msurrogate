@@ -97,36 +97,36 @@ classdef pywrap < handle
       map = msurrogate.dict2map(self.object);
     end
 
-    function s = struct(object)
-      s = msurrogate.dict2struct(object.object);
+    function s = struct(self)
+      s = msurrogate.dict2struct(self.object);
     end
 
-    function c = char(object)
-      c = char(py.str(object.object));
+    function c = char(self)
+      c = char(py.str(self.object));
     end
 
-    function out = dir(object)
-      out = msurrogate.py2mat(py.dir(object.object), object.handle);
+    function out = dir(self)
+      out = msurrogate.py2mat(py.dir(self.object), self.handle);
     end
 
-    function c = disp(object)
-      disp(['pywrap[', repr(object), ']']);
+    function c = disp(self)
+      disp(['pywrap[', repr(self), ']']);
     end
 
-    function c = repr(object)
-      c = char(py.repr(object.object));
+    function c = repr(self)
+      c = char(py.repr(self.object));
     end
 
-    function val = pyraw(object)
-      val = object.object;
+    function val = pyraw(self)
+      val = self.object;
     end
 
-    function out = properties(object)
-      out = msurrogate.py2mat(py.dir(object.object), object.handle);
+    function out = properties(self)
+      out = msurrogate.py2mat(py.dir(self.object), self.handle);
     end
 
-    function [varargout] = mat2py(object)
-      varargout{1} = object.object;
+    function [varargout] = mat2py(self)
+      varargout{1} = self.object;
     end
   end
 end
