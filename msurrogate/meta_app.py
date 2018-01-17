@@ -249,8 +249,8 @@ class SurrogateApp(object):
             self.hide_secret = False
 
         if self.secret is not '':
-            Pyro4.Daemon._pyroHmacKey = self.secret
-            Pyro4.Proxy._pyroHmacKey = self.secret
+            Pyro4.Daemon._pyroHmacKey = bytes(self.secret)
+            Pyro4.Proxy._pyroHmacKey = bytes(self.secret)
 
         Pyro4.config.SERIALIZERS_ACCEPTED = set(Pyro4.config.SERIALIZERS_ACCEPTED)
         if self.defaults['allow-dill']:
@@ -353,8 +353,8 @@ def cookie_setup(cookie_dict):
     secret = cookie_dict.get('secret', '')
 
     if secret is not None and secret != '':
-        Pyro4.Daemon._pyroHmacKey = secret
-        Pyro4.Proxy._pyroHmacKey  = secret
+        Pyro4.Daemon._pyroHmacKey = bytes(secret)
+        Pyro4.Proxy._pyroHmacKey  = bytes(secret)
 
     serializer = cookie_dict.get('serializer-preferred', None)
 
