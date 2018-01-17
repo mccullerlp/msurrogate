@@ -10,11 +10,13 @@
 classdef pywrap < handle
   properties
     object
+    handle
   end
   methods (Access = public)
 
-    function self = pywrap(object)
+    function self = pywrap(object, handle)
       self.object = object;
+      self.handle = handle;
     end
 
 
@@ -27,10 +29,10 @@ classdef pywrap < handle
             val = py.getattr(self.object, name);
 
             if not(isempty(ref(2:end)))
-              val = py2mat(val);
+              val = py2mat(val, self.handle);
               [varargout{1:nargout}] = subsref(val, ref(2:end));
              else
-               [varargout{1:nargout}] = py2mat(val);
+               [varargout{1:nargout}] = py2mat(val, self.handle);
             end
           case '()'
             % function call semantics!
@@ -40,7 +42,7 @@ classdef pywrap < handle
             args = mat2py(args);
             kwargs = mat2py(kwargs);
             val = pyapply(self.object, args, kwargs);
-            val = py2mat(val);
+            val = py2mat(val, self.handle);
 
             if not(isempty(ref(2:end)))
               [varargout{1:nargout}] = subsref(val, ref(2:end));
@@ -49,13 +51,15 @@ classdef pywrap < handle
             end
           case '{}'
             % array access semantics!
-            name = ref(1).subs
+            args_raw = ref(1).subs;
 
-            %now need to convert to str, single index or index array
-            %TODO
+            if length(args_raw) == 1
+              args_raw = args_raw{1};
+            end
 
-            val = py.operator.getitem(self.object, name);
-            val = py2mat(val);
+            args = mat2py(args_raw);
+            val = py.operator.getitem(self.object, args);
+            val = py2mat(val, self.handle);
 
             if not(isempty(ref(2:end)))
               [varargout{1:nargout}] = subsref(val, ref(2:end));
@@ -89,9 +93,41 @@ classdef pywrap < handle
   end
 
   methods
-    [varargout] = mat2py(object)
-    [varargout] = py2mat(object)
-    val = pyraw(object)
+    function map = containers.Map(self)
+      map = msurrogate.dict2map(self.object);
+    end
+
+    function s = struct(object)
+      s = msurrogate.dict2struct(object.object);
+    end
+
+    function c = char(object)
+      c = char(py.str(object.object));
+    end
+
+    function out = dir(object)
+      out = msurrogate.py2mat(py.dir(object.object), object.handle);
+    end
+
+    function c = disp(object)
+      disp(['pywrap[', repr(object), ']']);
+    end
+
+    function c = repr(object)
+      c = char(py.repr(object.object));
+    end
+
+    function val = pyraw(object)
+      val = object.object;
+    end
+
+    function out = properties(object)
+      out = msurrogate.py2mat(py.dir(object.object), object.handle);
+    end
+
+    function [varargout] = mat2py(object)
+      varargout{1} = object.object;
+    end
   end
 end
 

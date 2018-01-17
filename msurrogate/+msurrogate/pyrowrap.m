@@ -11,10 +11,12 @@ classdef pyrowrap < handle
   properties
     async
     object
+    handle
   end
   methods (Access = public)
 
-    function self = pyrowrap(object, async)
+    function self = pyrowrap(object, async, handle)
+      self.handle = handle;
       self.async = async;
       self.object = object;
     end
@@ -31,12 +33,6 @@ classdef pyrowrap < handle
 
     function [varargout] = subsref(self, ref)
       import msurrogate.*
-      if length(ref) == 3
-        disp(length(ref) == 3)
-        disp(ref(2).type == '.')
-        disp(ref(3).type == '()')
-        disp(ref(2).subs == 'async')
-      end
       switch ref(1).type
           case '.'
             name = ref(1).subs;
@@ -54,7 +50,7 @@ classdef pyrowrap < handle
               %too dynamic for matlab's interface, so use getattr
               call = py.getattr(self.internal(), 'pyrometa_call');
               val = pyapply(call, args, kwargs);
-              [varargout{1:nargout}] = py2mat(val);
+              [varargout{1:nargout}] = py2mat(val, self.handle);
               return
             elseif (length(ref) == 3) && all(ref(2).type == '.') && all(ref(3).type == '()') && all(ref(2).subs == 'async')
               args_raw = ref(3).subs;
@@ -72,7 +68,7 @@ classdef pyrowrap < handle
               val = pyapply(call, args, kwargs);
 
               py.Pyro4.async(self.internal(), false);
-              [varargout{1:nargout}] = pyrowrap(val, true);
+              [varargout{1:nargout}] = pyrowrap(val, true, self.handle);
               return
             end
 
@@ -80,10 +76,10 @@ classdef pyrowrap < handle
             val = pyapply(call, {name}, struct());
 
             if not(isempty(ref(2:end)))
-              val = py2mat(val);
+              val = py2mat(val, self.handle);
               [varargout{1:nargout}] = subsref(val, ref(2:end));
              else
-               [varargout{1:nargout}] = py2mat(val);
+               [varargout{1:nargout}] = py2mat(val, self.handle);
             end
 
           case '()'
@@ -96,9 +92,9 @@ classdef pyrowrap < handle
             args = mat2py({py.None, args{:}});
             kwargs = mat2py(kwargs);
 
-            call = py.getattr(self.internal(), 'pyrometa_call')
+            call = py.getattr(self.internal(), 'pyrometa_call');
             val = pyapply(call, args, kwargs);
-            val = py2mat(val);
+            val = py2mat(val, self.handle);
 
             if not(isempty(ref(2:end)))
               [varargout{1:nargout}] = subsref(val, ref(2:end));
@@ -107,14 +103,16 @@ classdef pyrowrap < handle
             end
           case '{}'
             % array access semantics!
-            name = ref(1).subs
+            args_raw = ref(1).subs;
 
-            %now need to convert to str, single index or index array
-            %TODO
+            if length(args_raw) == 1
+              args_raw = args_raw{1};
+            end
 
-            call = py.getattr(self.internal(), 'pyrometa_getitem')
+            args = mat2py(args_raw);
+            call = py.getattr(self.internal(), 'pyrometa_getitem');
             val = pyapply(call, args, struct());
-            val = py2mat(val);
+            val = py2mat(val, self.handle);
 
             if not(isempty(ref(2:end)))
               [varargout{1:nargout}] = subsref(val, ref(2:end));
@@ -172,9 +170,44 @@ classdef pyrowrap < handle
   end
 
   methods
-    [varargout] = mat2py(object)
-    [varargout] = py2mat(object)
-    val = pyraw(object)
+    function c = disp(object)
+      disp(['pyrowrap[', repr(object), ']']);
+    end
+
+    function c = char(object)
+      call = py.getattr(self.internal(), 'pyrometa_str');
+      val = pyapply(call, args, kwargs);
+      c = char(val);
+    end
+
+    function out = dir(self)
+      call = py.getattr(self.internal(), 'pyrometa_dir');
+      val = pyapply(call, args, kwargs);
+      out = msurrogate.py2mat(py.dir(dir), self.handle);
+    end
+
+    function c = repr(object)
+      call = py.getattr(self.internal(), 'pyrometa_repr');
+      val = pyapply(call, args, kwargs);
+      out = msurrogate.py2mat(val, self.handle);
+      c = ['<remote>', out];
+    end
+
+    function s = struct(object)
+      s = msurrogate.dict2struct(object.object);
+    end
+
+    function [varargout] = mat2py(object)
+      varargout{1} = object.object;
+    end
+
+    function out = properties(object)
+      out = dir(object)
+    end
+
+    function val = pyraw(object)
+      val = object.object;
+    end
   end
 end
 

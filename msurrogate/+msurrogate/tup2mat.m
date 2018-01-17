@@ -1,4 +1,4 @@
-function [varargout] = tup2mat(object)
+function [varargout] = tup2mat(object, handle)
   import msurrogate.*
   ocells = cell(object);
   try
@@ -6,9 +6,9 @@ function [varargout] = tup2mat(object)
   catch ME
       switch ME.identifier
       case 'MATLAB:cell2mat:MixedDataTypes'
-        varargout{1} = cellfun(@py2mat, ocells, 'UniformOutput', false);
+        varargout{1} = cellfun(@(obj) py2mat(obj, handle), ocells, 'UniformOutput', false);
       case 'MATLAB:cell2mat:UnsupportedCellContent'
-        varargout{1} = cellfun(@py2mat, ocells, 'UniformOutput', false);
+        varargout{1} = cellfun(@(obj) py2mat(obj, handle), ocells, 'UniformOutput', false);
       otherwise
         ME.identifier
         error(ME)

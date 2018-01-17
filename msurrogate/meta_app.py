@@ -5,15 +5,18 @@ from __future__ import division, print_function, unicode_literals
 import argparse
 import socket
 import Pyro4
-from .meta_daemon import MetaDaemon
+import collections
 import sys
 import json
 import uuid
+
+from .meta_daemon import MetaDaemon
 
 if sys.version > (3, 0):
     pass
 else:
     input = raw_input
+
 
 class SurrogateApp(object):
 
@@ -45,6 +48,7 @@ class SurrogateApp(object):
             'workspace-auto' :         True,
             'multithreaded-auto-off' : False,
             'hide-secret' :            True,
+            'serializer-preferred' :   None,
         }
 
         self.args        = None
@@ -57,7 +61,7 @@ class SurrogateApp(object):
         else:
             try:
                 self.forced.remove(name)
-            except IndexError:
+            except KeyError:
                 pass
         self.defaults[name] = value
         return
@@ -300,6 +304,9 @@ class SurrogateApp(object):
         )
         if not self.hide_secret:
             d['secret'] = self.secret
+        serializer_pref = self.defaults['serializer-preferred']
+        if serializer_pref is not None:
+            d['serializer-preferred'] = serializer_pref
         return d
 
     def cookie_write(self):
@@ -336,3 +343,29 @@ class SurrogateApp(object):
         self.cookie_write()
         self.meta_daemon.daemon.requestLoop()
         return
+
+
+def cookie_setup(cookie_dict):
+    if not isinstance(cookie_dict, collections.Mapping):
+        #then it must be a string
+        cookie_dict = json.loads(cookie_dict)
+
+    secret = cookie_dict.get('secret', '')
+
+    if secret is not None and secret != '':
+        Pyro4.Daemon._pyroHmacKey = secret
+        Pyro4.Proxy._pyroHmacKey  = secret
+
+    serializer = cookie_dict.get('serializer-preferred', None)
+
+    if serializer is not None:
+        Pyro4.config.SERIALIZER = serializer
+
+    sys.excepthook = Pyro4.util.excepthook
+    return cookie_dict['workspace']
+
+
+
+
+
+

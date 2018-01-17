@@ -2,11 +2,11 @@
 clear classes
 addpath(char(py.msurrogate.matlabpath()));
 
-call = msurrogate.pywrap(@py.msurrogate.subproc_server.ServerSubprocess);
-proc = call('module_name', 'msurrogate.ping_test');
-
-disp(proc.mysecret)
-disp(proc.cookie_dict)
+%call = msurrogate.pywrap(@py.msurrogate.subproc_server.ServerSubprocess, []);
+%proc = call('module_name', 'msurrogate.ping_test');
+%
+%disp(pyraw(proc.cookie_dict))
+%disp(proc.cookie_dict{'workspace'}{'test_ping'})
 
 %import numpy_cast.*
 %qb = py.iirrational.testing.iirrational_data('simple2');
@@ -24,3 +24,7 @@ disp(proc.cookie_dict)
 %obj = factory.rationalize.async({mqb});
 %disp(obj.fitter.xfer_fit)
 %obj.pyrosuper_getattr({'fitter'}).pyrosuper_call({'optimize'})
+
+
+surrogate = msurrogate.PySurrogate();
+surrogate.connect_subprocess('msurrogate.ping_test')

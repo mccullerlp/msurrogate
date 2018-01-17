@@ -56,6 +56,23 @@ class MetaProxy(object):
         self.obj = obj
         return
 
+    def pyrometa_subsref(self, ref):
+        #TODO
+        raise NotImplementedError()
+
+    def pyrometa_subsassgn(self, ref, val):
+        #TODO
+        raise NotImplementedError()
+
+    def pyrometa_repr(self):
+        return repr(self)
+
+    def pyrometa_str(self):
+        return str(self)
+
+    def pyrometa_dir(self):
+        return dir(self)
+
     def pyrometa_getattr(self, name):
         checkname(self.obj, name)
         val = getattr(self.obj, name)
@@ -102,6 +119,8 @@ class MetaProxy(object):
             return obj
         elif isinstance(obj, numbers.Number):
             return obj
+        elif isinstance(obj, str_types):
+            return obj
         elif isinstance(obj, list):
             try:
                 sublist = [self.pyrometa_wrap(o, throw = True) for o in obj]
@@ -109,7 +128,7 @@ class MetaProxy(object):
                 if throw:
                     raise
                 else:
-                    return MetaProxy(self.metaD.daemon, obj)
+                    return MetaProxy(self.metaD, obj)
             else:
                 return sublist
         elif isinstance(obj, tuple):
@@ -119,7 +138,7 @@ class MetaProxy(object):
                 if throw:
                     raise
                 else:
-                    return MetaProxy(self.metaD.daemon, obj)
+                    return MetaProxy(self.metaD, obj)
             else:
                 return subtup
         elif isinstance(obj, set):
@@ -129,7 +148,7 @@ class MetaProxy(object):
                 if throw:
                     raise
                 else:
-                    return MetaProxy(self.metaD.daemon, obj)
+                    return MetaProxy(self.metaD, obj)
             else:
                 return subset
         elif isinstance(obj, dict):
@@ -141,13 +160,13 @@ class MetaProxy(object):
                 if throw:
                     raise
                 else:
-                    return MetaProxy(self.metaD.daemon, obj)
+                    return MetaProxy(self.metaD, obj)
             else:
                 return subdict
         if throw:
             raise NeedsSubMeta()
 
-        return MetaProxy(self.metaD.daemon, obj)
+        return MetaProxy(self.metaD, obj)
 
     def pyrometa_unwrap(self, obj):
         """

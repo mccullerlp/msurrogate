@@ -2,7 +2,6 @@
 An msurrogate model server. Start this code to connect from other applications
 """
 from __future__ import division, print_function, unicode_literals
-from .meta_daemon import MetaDaemon
 import sys
 import json
 import uuid
@@ -10,7 +9,7 @@ import subprocess
 import threading
 
 
-class ServerSubprocess(object):
+class SurrogateSubprocess(object):
 
     def __init__(
         self,
@@ -20,10 +19,26 @@ class ServerSubprocess(object):
         stdout_prepend = '  PYOUT:',
         stderr_prepend = '  PYERR:',
         args           = [],
+        relay_stdout   = True,
+        relay_stderr   = True,
     ):
 
         self.stdout_prepend = stdout_prepend
         self.stderr_prepend = stderr_prepend
+        self.relay_stdout = relay_stdout
+        self.relay_stderr = relay_stderr
+
+        #update the environment and clear variables with None
+        if env is not None:
+            env = dict(sys.environ)
+            for k, v in env.items():
+                if v is None:
+                    try:
+                        del env[k]
+                    except KeyError:
+                        pass
+                else:
+                    env[k] = v
 
         if python_call is None:
             python_call = sys.executable
@@ -41,8 +56,8 @@ class ServerSubprocess(object):
         )
 
         #write the secret
-        self.mysecret = str(uuid.uuid4())
-        self.proc.stdin.write(self.mysecret + "\n")
+        mysecret = str(uuid.uuid4())
+        self.proc.stdin.write(mysecret + "\n")
 
         #start the error feed first so that we can see what is going on
         self.stderr_thread = threading.Thread(
@@ -70,6 +85,10 @@ class ServerSubprocess(object):
             cookie_lines.append(line)
         self.cookie_dict = json.loads(''.join(cookie_lines))
 
+        #add the secret back in
+        if 'secret' not in self.cookie_dict:
+            self.cookie_dict['secret'] = mysecret
+
         self.stdout_thread = threading.Thread(
             target = self._stdout_thread_loop,
             name = 'python subprocess stdout feed'
@@ -80,9 +99,13 @@ class ServerSubprocess(object):
         return
 
     def stop(self):
-        self.proc.kill()
-        #stops the threads
-        self.proc = None
+        proc = self.proc
+        if proc is not None:
+            #TODO need try-catch if already stopped?
+            proc.kill()
+            #TODO check if process really terminated
+            #stops the threads
+            self.proc = None
         return
 
     def _stdout_thread_loop(self):
@@ -91,7 +114,8 @@ class ServerSubprocess(object):
             line = proc.stdout.readline()
             if not line:
                 break
-            sys.stdout.write(self.stdout_prepend + line)
+            if self.relay_stdout:
+                sys.stdout.write(self.stdout_prepend + line)
             proc = self.proc
 
     def _stderr_thread_loop(self):
@@ -100,7 +124,8 @@ class ServerSubprocess(object):
             line = proc.stderr.readline()
             if not line:
                 break
-            sys.stderr.write(self.stderr_prepend + line)
+            if self.relay_stderr:
+                sys.stderr.write(self.stderr_prepend + line)
             proc = self.proc
 
 

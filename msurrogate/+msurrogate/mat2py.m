@@ -30,6 +30,8 @@ function [varargout] = mat2py(object)
       varargout{1} = cell2py(object);
     case 'char'
       varargout{1} = object;
+    case 'containers.Map';
+      varargout{1} = map2dict(object);
     otherwise
       varargout{1} = object;
     end

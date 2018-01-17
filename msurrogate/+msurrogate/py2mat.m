@@ -1,11 +1,11 @@
-function [varargout] = py2mat(object)
+function [varargout] = py2mat(object, handle)
   import msurrogate.*
   cname = class(object);
   switch cname
   case 'py.list'
-    [varargout{1:nargout}] = tup2mat(object);
+    [varargout{1:nargout}] = tup2mat(object, handle);
   case 'py.tuple'
-    [varargout{1:nargout}] = tup2mat(object);
+    [varargout{1:nargout}] = tup2mat(object, handle);
   case 'py.numpy.ndarray'
     if py.numpy.iscomplexobj(object)
       arr_real = py.array.array('d', object.real.flatten());
@@ -31,14 +31,16 @@ function [varargout] = py2mat(object)
   otherwise
     if strcmp(cname(1:3), 'py.')
       if length(cname) >= 14 && strcmp(cname(1:9), 'py.Pyro4.') && strcmp(cname(end-4:end), 'Proxy')
+        disp('hmm')
+        disp(object)
         %it may be a superproxy! so try it out
-        if py.hasattr(object, 'pyrosuper_getattr')
-          varargout{1} = pyrowrap(object, false);
+        if py.hasattr(object, 'pyrometa_getattr')
+          varargout{1} = pyrowrap(object, false, handle);
         else
-          varargout{1} = pywrap(object);
+          varargout{1} = pywrap(object, handle);
         end
       else
-        varargout{1} = pywrap(object);
+        varargout{1} = pywrap(object, handle);
       end
     else
       varargout{1} = object;
