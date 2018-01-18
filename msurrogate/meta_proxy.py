@@ -10,7 +10,7 @@ try:
 except ImportError:
     import fake_numpy as np
 
-if sys.version >= (3, 0):
+if sys.version_info >= (3, 0):
     str_types = (str,)
 else:
     str_types = (str, unicode)

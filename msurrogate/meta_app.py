@@ -12,7 +12,7 @@ import uuid
 
 from .meta_daemon import MetaDaemon
 
-if sys.version > (3, 0):
+if sys.version_info > (3, 0):
     pass
 else:
     input = raw_input
