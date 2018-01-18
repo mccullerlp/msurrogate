@@ -30,3 +30,5 @@ git_longhash  = "$longhash"
 git_tag       = "$latesttag"
 git_revcount  = "$revcount"
 EOF
+
+git add $FILENAME
