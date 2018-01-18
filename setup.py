@@ -4,16 +4,40 @@ from __future__ import division, print_function, unicode_literals
 import os
 import sys
 from distutils.sysconfig import get_python_lib
+from os import path
+import warnings
+
 
 from setuptools import find_packages, setup
 
-from . import msurrogate
+version = '0.9.0.dev1'
 
-version = msurrogate.version
+def check_versions():
+    try:
+        curpath = path.abspath(path.realpath(os.getcwd()))
+        setuppath = path.abspath(path.realpath(path.split(__file__)[0]))
 
-extra_install_requires = []
-if sys.version_info < (3,0):
-    extra_install_requires.append('future')
+        if curpath != setuppath:
+            sys.path.append(setuppath)
+        import msurrogate
+
+        modfile = path.abspath(path.realpath(path.split(msurrogate.__file__)[0]))
+        mod_relpath = path.relpath(modfile, setuppath)
+        if mod_relpath == 'msurrogate':
+            if msurrogate.__version__ != version:
+                warnings.warn("Stated module version {0} different than setup.py version {1}".format(msurrogate.__version__, version))
+
+        import subprocess
+        try:
+            git_tag = subprocess.check_output(['git', 'describe', '--tags', '--abbrev'])
+        except subprocess.CalledProcessError:
+            pass
+        else:
+            if git_tag != version:
+                warnings.warn("latex git-tag different than setup.py version {1}".format(msurrogate.__version__, version))
+    except ImportError:
+        pass
+
 
 setup(
     name='msurrogate',
@@ -32,7 +56,7 @@ setup(
     install_requires = [
         'numpy',
         'Pyro4',
-    ] + extra_install_requires,
+    ],
     tests_require = [
         'pytest',
         'pytest-runner',
@@ -52,7 +76,6 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        'Topic :: Scientific/Engineering :: Physics',
     ],
 )
 

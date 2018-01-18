@@ -4,11 +4,10 @@ from __future__ import division, print_function, unicode_literals
 
 from os import path
 
-from .version import version
-
-def matlabpath():
-    return path.abspath(path.split(__file__)[0])
-
+from .version import (
+    version,
+    __version__
+)
 
 from .meta_app import (
     SurrogateApp,
@@ -18,3 +17,7 @@ from .meta_app import (
 from .subproc_server import (
     SurrogateSubprocess,
 )
+
+def matlabpath():
+    return path.abspath(path.split(__file__)[0])
+

@@ -22,10 +22,6 @@ function [args, kwargs] = collectargs(args_raw)
       end
     end
 
-    args
-    kwargs
-    idx_kw
-
     i = idx_kw;
     try
       while i <= numel(args_raw)
