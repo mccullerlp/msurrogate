@@ -4,6 +4,7 @@ from __future__ import division, print_function, unicode_literals
 
 from os import path
 
+from .version import version
 
 def matlabpath():
     return path.abspath(path.split(__file__)[0])
