@@ -7,7 +7,9 @@ from distutils.sysconfig import get_python_lib
 
 from setuptools import find_packages, setup
 
-version = '0.9.8.dev1'
+from . import msurrogate
+
+version = msurrogate.version
 
 extra_install_requires = []
 if sys.version_info < (3,0):
