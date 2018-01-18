@@ -1,7 +1,7 @@
 """
 """
 from __future__ import division, print_function, unicode_literals
-from msurrogate.meta_app import SurrogateApp
+from msurrogate import SurrogateApp
 
 
 def test_ping(text = ''):

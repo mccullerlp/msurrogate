@@ -46,8 +46,10 @@ class SurrogateSubprocess(object):
         if module_name is None:
             raise RuntimeError("Must specify module_name")
 
+        #the -u is for unbuffered output (otherwise code must use flush everywhere)
+        #-S - and -c - are for the secret to be relayed via stdin and the cookie via stdout.
         self.proc = subprocess.Popen(
-            [python_call, '-m', module_name, '-S', '-', '-c', '-'] + args,
+            [python_call, '-u', '-m', module_name, '-S', '-', '-c', '-'] + args,
             stdout = subprocess.PIPE,
             stdin  = subprocess.PIPE,
             stderr = subprocess.PIPE,

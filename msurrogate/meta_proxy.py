@@ -95,6 +95,7 @@ class MetaProxy(object):
         return
 
     def pyrometa_call(self, name, *args, **kwargs):
+        print(name, args, kwargs)
         if name is None:
             val = self.obj
         else:

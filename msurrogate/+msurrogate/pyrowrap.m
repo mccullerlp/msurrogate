@@ -227,7 +227,7 @@ classdef pyrowrap < handle
     function out = dir(self)
       call = py.getattr(self.internal(), 'pyrometa_dir');
       val = msurrogate.pyapply(call, {}, struct());
-      out = msurrogate.py2mat(py.dir(dir), self.handle);
+      out = msurrogate.py2mat(val, self.handle);
     end
 
     function c = repr(self)
@@ -253,7 +253,7 @@ classdef pyrowrap < handle
     end
 
     function out = properties(self)
-      out = dir(self)
+      out = dir(self);
     end
 
     function val = pyraw(self)
