@@ -3,16 +3,16 @@
 from __future__ import division, print_function, unicode_literals
 import os
 import sys
-from distutils.sysconfig import get_python_lib
 from os import path
 import warnings
-
-
 from setuptools import find_packages, setup
+from distutils.command.bdist import bdist
+from distutils.command.sdist import sdist
 
 version = '0.9.0.dev1'
 
 def check_versions():
+    print('versions checked')
     try:
         curpath = path.abspath(path.realpath(os.getcwd()))
         setuppath = path.abspath(path.realpath(path.split(__file__)[0]))
@@ -25,48 +25,81 @@ def check_versions():
         mod_relpath = path.relpath(modfile, setuppath)
         if mod_relpath == 'msurrogate':
             if msurrogate.__version__ != version:
-                warnings.warn("Stated module version {0} different than setup.py version {1}".format(msurrogate.__version__, version))
+                print("WARNING: Stated module version different than setup.py version", file = sys.stderr)
+                print("         '{0}' != '{1}'".format(msurrogate.__version__, version), file = sys.stderr)
 
         import subprocess
         try:
-            git_tag = subprocess.check_output(['git', 'describe', '--tags', '--abbrev'])
+            git_tag = subprocess.check_output(['git', 'describe', '--tags'])
+            git_tag = git_tag.strip()
         except subprocess.CalledProcessError:
             pass
         else:
             if git_tag != version:
-                warnings.warn("latex git-tag different than setup.py version {1}".format(msurrogate.__version__, version))
+                if git_tag.startswith(version):
+                    print("WARNING: latex git-tag has commits since versioning", file = sys.stderr)
+                    print("         '{0}' ---> '{1}'".format(version, git_tag), file=sys.stderr)
+                else:
+                    print("WARNING: latex git-tag different than setup.py version", file = sys.stderr)
+                    print("         '{0}' != '{1}'".format(version, git_tag), file=sys.stderr)
+                print("         Perhaps update versions in setup.py and msurrogate.version, git commit, then git tag")
+                print("         otherwise fix tag if not yet git pushed to remote (see DISTRIBUTION-README.md)")
+
     except ImportError:
         pass
+
+
+cmdclass = dict()
+
+class check_bdist(bdist):
+    def run(self):
+        bdist.run(self)
+        check_versions()
+
+class check_sdist(sdist):
+    def run(self):
+        sdist.run(self)
+        check_versions()
+
+cmdclass['bdist'] = check_bdist
+cmdclass['sdist'] = check_sdist
+
+try:
+    from wheel.bdist_wheel import bdist_wheel
+    class check_bdist_wheel(bdist_wheel):
+        def run(self):
+            bdist_wheel.run(self)
+            check_versions()
+except ImportError:
+    pass
+
+cmdclass['bdist_wheel'] = check_bdist_wheel
 
 
 setup(
     name='msurrogate',
     version=version,
-    url='',
+    url='https://github.com/mccullerlp/msurrogate',
     author='Lee McCuller',
     author_email='Lee.McCuller@gmail.com',
     description=(
         'Interface With a python process from Matlab'
     ),
     license='Apache v2',
-    packages=find_packages(exclude=['doc']),
-    setup_requires = [
-        'pytest-runner'
-    ],
+    packages=find_packages(
+        exclude=['docs'],
+    ),
     install_requires = [
         'numpy',
         'Pyro4',
     ],
-    tests_require = [
-        'pytest',
-        'pytest-runner',
-        'pytest-benchmark',
-    ],
-    zip_safe=False,
-    keywords = 'Controls Linear Physics',
+    cmdclass = cmdclass,
+    zip_safe = False,
+    keywords = 'Matlab IPC Pyro4',
     classifiers=[
-        'Development Status :: 3 - Alpha ',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
+        'Topic :: Scientific/Engineering',
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',

@@ -1,12 +1,12 @@
 include LICENSE
-#include README.rst
-#include README.md
-#include README.ipynb
+include README.rst
+include DISTRIBUTION-README.md
 include MANIFEST.in
 include setup.cfg
 include setup.py
+include tox.ini
 
-recursive-include msurrogate/ *.py
-recursive-include msurrogate/ *.m
-recursive-include test/ *.py
-recursive-include test/ *.m
+recursive-include msurrogate *.py
+recursive-include msurrogate *.m
+recursive-include test *.py
+recursive-include test *.m
