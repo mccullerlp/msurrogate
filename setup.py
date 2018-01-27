@@ -26,6 +26,7 @@ def check_versions():
             if msurrogate.__version__ != version:
                 print("WARNING: Stated module version different than setup.py version", file = sys.stderr)
                 print("         '{0}' != '{1}'".format(msurrogate.__version__, version), file = sys.stderr)
+                print("Fix version.py and setup.py for consistency")
 
         import subprocess
         try:
