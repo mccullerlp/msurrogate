@@ -103,8 +103,13 @@ class MetaProxy(object):
             val = getattr(self.obj, name)
         unargs = self.pyrometa_unwrap(args)
         unkwargs = self.pyrometa_unwrap(kwargs)
-        with self.metaD.worker_sem:
-            ret = val(*unargs, **unkwargs)
+        if check_MTsafe(val):
+            with self.metaD.worker_sem:
+                ret = val(*unargs, **unkwargs)
+        else:
+            with self.metaD.MTsafe:
+                with self.metaD.worker_sem:
+                    ret = val(*unargs, **unkwargs)
         return self.pyrometa_wrap(ret)
 
     @Pyro4.oneway
@@ -116,8 +121,13 @@ class MetaProxy(object):
             val = getattr(self.obj, name)
         unargs = self.pyrometa_unwrap(args)
         unkwargs = self.pyrometa_unwrap(kwargs)
-        with self.metaD.worker_sem:
-            ret = val(*unargs, **unkwargs)
+        if check_MTsafe(val):
+            with self.metaD.worker_sem:
+                ret = val(*unargs, **unkwargs)
+        else:
+            with self.metaD.MTsafe:
+                with self.metaD.worker_sem:
+                    ret = val(*unargs, **unkwargs)
         return
 
     def pyrometa_done(self):
@@ -218,8 +228,27 @@ class MetaProxy(object):
 def checkname(obj, name):
     if name.startswith('_'):
         try:
-            allow = obj._msurragate_unsafe
+            allow = obj._msurrogate_unsafe
         except AttributeError:
             allow = False
         if not allow:
             raise AttributeError('attributes/methods starting with _ not allowed')
+
+def check_MTsafe(obj):
+    """
+    Recurse up object and parents via __self__ of instancemethod types in search of an obj._msurrogate_MT flag indicating to use full multithreading
+    """
+    #TODO, could do isinstance checks against types.FunctionType and types.MethodType, but those seem to carry __self__
+    while True:
+        try:
+            safe = obj._msurrogate_MT
+        except AttributeError:
+            pass
+        else:
+            return safe
+
+        try:
+            parent = obj.__self__
+        except AttributeError:
+            return False
+        obj = parent

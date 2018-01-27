@@ -10,7 +10,7 @@
 classdef PySurrogate < handle
   properties
     proc = [];
-    workspace = containers.Map();
+    workspace = [];
     auto_stop = false;
   end
   methods (Access = public)
@@ -27,8 +27,19 @@ classdef PySurrogate < handle
       end
     end
 
+    function b = attached(self)
+      if isempty(self.workspace) && ~isa(self.workspace, 'containers.Map')
+        b = false;
+      else
+        b = true;
+      end
+    end
+
     function stop(self)
       import msurrogate.*
+      if ~self.attached()
+        return
+      end
       if self.workspace.isKey('workspace_close')
         self.workspace_close();
       end
@@ -36,7 +47,7 @@ classdef PySurrogate < handle
         self.proc.stop()
       end
       self.proc = [];
-      self.workspace = containers.Map();
+      self.workspace = [];
       self.auto_stop = false;
     end
 

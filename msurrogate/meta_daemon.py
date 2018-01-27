@@ -21,6 +21,7 @@ class MetaDaemon(object):
         self.daemon = daemon
         self._worker_sem_value = None
         self.workers_N_set(workers_N)
+        self.MTsafe = threading.Lock()
 
         #for caching GC
         self._metas_done = dict()

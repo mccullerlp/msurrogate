@@ -76,39 +76,40 @@ except ImportError:
 cmdclass['bdist_wheel'] = check_bdist_wheel
 
 
-setup(
-    name='msurrogate',
-    version=version,
-    url='https://github.com/mccullerlp/msurrogate',
-    author='Lee McCuller',
-    author_email='Lee.McCuller@gmail.com',
-    description=(
-        'Interface With a python process from Matlab'
-    ),
-    license='Apache v2',
-    packages=find_packages(
-        exclude=['docs'],
-    ),
-    install_requires = [
-        'numpy',
-        'Pyro4',
-    ],
-    cmdclass = cmdclass,
-    zip_safe = False,
-    keywords = 'Matlab IPC Pyro4',
-    classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Developers',
-        'Topic :: Scientific/Engineering',
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-    ],
-)
+if __name__ == "__main__":
+    setup(
+        name         = 'msurrogate',
+        version      = version,
+        url          = 'https://github.com/mccullerlp/msurrogate',
+        author       = 'Lee McCuller',
+        author_email = 'Lee.McCuller@gmail.com',
+        license      = 'Apache v2',
+        description  = (
+            'Interface With an out-of-process (possibly remote) python instance from Matlab'
+        ),
+        packages=find_packages(
+            exclude=['docs'],
+        ),
+        install_requires = [
+            'numpy',
+            'Pyro4',
+        ],
+        cmdclass = cmdclass,
+        zip_safe = False,
+        keywords = 'Matlab IPC Pyro4',
+        classifiers=[
+            'Development Status :: 4 - Beta',
+            'Intended Audience :: Developers',
+            'Topic :: Scientific/Engineering',
+            'License :: OSI Approved :: Apache Software License',
+            'Operating System :: OS Independent',
+            'Programming Language :: Python',
+            'Programming Language :: Python :: 2',
+            'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.4',
+            'Programming Language :: Python :: 3.5',
+            'Programming Language :: Python :: 3.6',
+        ],
+    )
 
