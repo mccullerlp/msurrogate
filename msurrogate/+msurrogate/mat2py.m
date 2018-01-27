@@ -24,6 +24,8 @@ function [varargout] = mat2py(object)
     switch class(object)
     case 'msurrogate.pywrap'
       varargout{1} = pyraw(object);
+    case 'msurrogate.pyrowrap'
+      varargout{1} = pyraw(object);
     case 'struct'
       varargout{1} = struct2py(object);
     case 'cell'

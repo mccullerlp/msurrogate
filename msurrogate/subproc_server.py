@@ -3,6 +3,7 @@ An msurrogate model server. Start this code to connect from other applications
 """
 from __future__ import division, print_function, unicode_literals
 import sys
+import os
 import json
 import uuid
 import subprocess
@@ -30,15 +31,15 @@ class SurrogateSubprocess(object):
 
         #update the environment and clear variables with None
         if env is not None:
-            env = dict(sys.environ)
+            env_use = dict(os.environ)
             for k, v in env.items():
                 if v is None:
                     try:
-                        del env[k]
+                        del env_use[k]
                     except KeyError:
                         pass
                 else:
-                    env[k] = v
+                    env_use[k] = v
 
         if python_call is None:
             python_call = sys.executable
@@ -53,7 +54,7 @@ class SurrogateSubprocess(object):
             stdout = subprocess.PIPE,
             stdin  = subprocess.PIPE,
             stderr = subprocess.PIPE,
-            env    = env,
+            env    = env_use,
             bufsize=1,
         )
 
