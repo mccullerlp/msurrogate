@@ -4,12 +4,11 @@ from __future__ import division, print_function, unicode_literals
 import os
 import sys
 from os import path
-import warnings
 from setuptools import find_packages, setup
 from distutils.command.bdist import bdist
 from distutils.command.sdist import sdist
 
-version = '0.9.0.dev1'
+version = '0.9.0.dev2'
 
 def check_versions():
     print('versions checked')
