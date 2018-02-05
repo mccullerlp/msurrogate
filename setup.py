@@ -8,7 +8,7 @@ from setuptools import find_packages, setup
 from distutils.command.bdist import bdist
 from distutils.command.sdist import sdist
 
-version = '0.9.0.dev3'
+version = '0.9.0.rc1'
 
 def check_versions():
     print('versions checked')
@@ -32,6 +32,7 @@ def check_versions():
         try:
             git_tag = subprocess.check_output(['git', 'describe', '--tags'])
             git_tag = git_tag.strip()
+            git_tag = str(git_tag)
         except subprocess.CalledProcessError:
             pass
         else:
@@ -96,7 +97,7 @@ if __name__ == "__main__":
         ],
         cmdclass = cmdclass,
         zip_safe = False,
-        keywords = 'Matlab IPC Pyro4',
+        keywords = ['Matlab', 'IPC', 'Pyro4',],
         classifiers=[
             'Development Status :: 4 - Beta',
             'Intended Audience :: Developers',
