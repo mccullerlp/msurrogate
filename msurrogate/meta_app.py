@@ -43,7 +43,7 @@ class SurrogateApp(object):
             'workers'        :         4,
             'multithread'    :         True,
             #non-config options
-            'allow-dill'     :         True,
+            'allow-dill'     :         False,
             'allow-pickle'   :         True,
             'workspace-auto' :         True,
             'multithreaded-auto-off' : False,

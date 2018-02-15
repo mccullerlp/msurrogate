@@ -71,7 +71,11 @@ class MetaProxy(object):
         return str(self.obj)
 
     def pyrometa_dir(self):
-        return dir(self.obj)
+        dirlist = dir(self.obj)
+        dirlist.sort()
+        if self.protect:
+            dirlist = [d for d in dirlist if not d.startswith('_')]
+        return dirlist
 
     def pyrometa_getattr(self, name):
         checkname(self.obj, name)

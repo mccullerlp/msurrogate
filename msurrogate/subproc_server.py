@@ -40,6 +40,8 @@ class SurrogateSubprocess(object):
                         pass
                 else:
                     env_use[k] = v
+        else:
+            env_use = None
 
         if python_call is None:
             python_call = sys.executable
