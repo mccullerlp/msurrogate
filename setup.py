@@ -8,7 +8,7 @@ from setuptools import find_packages, setup
 from distutils.command.bdist import bdist
 from distutils.command.sdist import sdist
 
-version = '0.9.0rc2'
+version = '0.9.0rc3'
 
 def check_versions():
     print('versions checked')
@@ -71,10 +71,9 @@ try:
         def run(self):
             bdist_wheel.run(self)
             check_versions()
+    cmdclass['bdist_wheel'] = check_bdist_wheel
 except ImportError:
     pass
-
-cmdclass['bdist_wheel'] = check_bdist_wheel
 
 
 if __name__ == "__main__":
@@ -91,13 +90,14 @@ if __name__ == "__main__":
         packages=find_packages(
             exclude=['docs'],
         ),
+        include_package_data = True,
         install_requires = [
             'numpy',
             'Pyro4',
         ],
         cmdclass = cmdclass,
         zip_safe = False,
-        keywords = ['Matlab', 'IPC', 'Pyro4',],
+        keywords = ['Matlab', 'IPC', 'Pyro4'],
         classifiers=[
             'Development Status :: 4 - Beta',
             'Intended Audience :: Developers',
